@@ -90,6 +90,7 @@ cd TargetDetectionSystem
 | 生成报告要用的贡献统计 | `.\scripts\worklog.ps1` |
 | 导出 Word 提交稿 | `.\scripts\export_docs.ps1` |
 | 我是配置管理员，要配置仓库 | [`docs/仓库设置清单.md`](docs/仓库设置清单.md) |
+| 核对协作流程是否真的搭好了 | [`docs/仓库搭建验收清单.md`](docs/仓库搭建验收清单.md) |
 
 ---
 
