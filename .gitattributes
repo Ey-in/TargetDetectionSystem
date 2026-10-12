@@ -1,0 +1,44 @@
+# ============================================================
+# 行尾与二进制文件策略
+# 没有这个文件，Git-for-Windows 的 autocrlf 会把每个文件
+# 永远标记成「已修改」，6 人协作会持续产生假冲突。
+# ============================================================
+
+# 默认：入库统一 LF，检出时按平台处理
+* text=auto eol=lf
+
+# Windows 脚本必须 CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell 脚本必须 LF，否则 Git Bash 下报 bad interpreter
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# 二进制文件：禁止行尾转换与文本合并
+*.pt     binary
+*.pth    binary
+*.onnx   binary
+*.engine binary
+*.jpg    binary
+*.jpeg   binary
+*.png    binary
+*.bmp    binary
+*.gif    binary
+*.mp4    binary
+*.avi    binary
+*.mov    binary
+*.docx   binary
+*.pptx   binary
+*.xlsx   binary
+*.pdf    binary
+
+# Markdown 在 GitHub 上按文本渲染，保留可读 diff
+*.md text
+
+# 让 git diff 认识这些文件的语言
+*.yml  text
+*.yaml text
+*.json text
+*.toml text

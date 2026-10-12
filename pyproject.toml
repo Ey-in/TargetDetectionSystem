@@ -1,0 +1,29 @@
+# 本文件只放工具配置，不用于打包。
+# 依赖统一由 requirements.txt / requirements-dev.txt 管理，见 scripts/setup-dev.ps1。
+# 运行环境：Python 3.12（见 CONTRIBUTING.md「环境统一」）
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# 数据、权重、推理产物目录不参与检查
+exclude = ["data", "models", "outputs", "提交物"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle 错误
+    "F",   # pyflakes
+    "I",   # import 排序
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]
+# 不检查行长：中文注释很容易超限，收益低噪音大
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# 默认跳过需要真实模型的慢用例，CI 因此可以只装 requirements-dev.txt
+addopts = '-m "not slow"'
+markers = [
+    "slow: 需要真实模型权重或大数据集，CI 不运行，由本地手动执行（pytest -m slow）",
+]

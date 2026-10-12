@@ -1,0 +1,67 @@
+# ============================================================
+# 目标检测系统 .gitignore
+# 原则：代码与文档入库；数据、权重、推理产物、密钥一律不入库
+# ============================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# ---------- 模型权重与导出格式 ----------
+# 权重走 GitHub Release 附件分发，见 models/README.md
+# （不用 git-lfs：免费额度仅 1GB 存储 / 1GB·月流量，6 人克隆几轮就爆）
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.mlpackage
+*.weights
+
+# ---------- 数据集与推理产物 ----------
+# 数据集用 scripts/fetch_data.ps1 拉取，见 data/README.md
+data/*
+!data/README.md
+!data/.gitkeep
+outputs/*
+!outputs/README.md
+!outputs/.gitkeep
+models/*
+!models/README.md
+!models/.gitkeep
+runs/
+uploads/
+
+# ---------- Office / WPS 锁文件 ----------
+# Word/PPT 打开文件时会生成 ~$xxx.docx，误提交会让别人无法打开
+~$*
+*.laccdb
+*.tmp
+
+# ---------- 前端 ----------
+node_modules/
+dist/
+.vite/
+
+# ---------- 编辑器与系统 ----------
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---------- 本地配置与密钥（绝不入库）----------
+.env
+.env.*
+!.env.example
+*.local
+config.local.*
+secrets.*
