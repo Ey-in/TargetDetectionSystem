@@ -106,7 +106,9 @@ $validTypes = @('feat','fix','docs','test','chore','refactor','perf','style','bu
 # ---------------------------------------------------------------- 总览
 Write-Step "总览"
 
-$allDates = $commits | Select-Object -ExpandProperty Date -Unique | Sort-Object
+# 注意：必须用 @() 强制成数组。只有一个唯一日期时 Select-Object -Unique 返回的是
+# 字符串而非数组，此时 $allDates[0] 会取到首字符（"2026-10-12"[0] == '2'）
+$allDates = @($commits | Select-Object -ExpandProperty Date -Unique | Sort-Object)
 Write-Note "提交总数：$($commits.Count)"
 Write-Note "时间跨度：$($allDates[0]) ~ $($allDates[-1])"
 Write-Note "活跃天数：$($allDates.Count)"
@@ -116,7 +118,7 @@ Write-Step "按人统计"
 
 $byAuthor = $commits | Group-Object -Property Author | ForEach-Object {
     $g = $_.Group
-    $dates = $g | Select-Object -ExpandProperty Date -Unique
+    $dates = @($g | Select-Object -ExpandProperty Date -Unique)
     [PSCustomObject]@{
         '姓名'     = $_.Name
         '邮箱'     = ($g | Select-Object -First 1).Email
