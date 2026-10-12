@@ -36,15 +36,16 @@
 git@github.com:Ey-in/TargetDetectionSystem.git
 ```
 
-**绝对不要照抄网页上显示的 `https://` 地址** —— 本机实测该地址 443 端口直连超时
-（命令行不读 Windows 系统代理），照抄会直接卡住 20 秒然后失败。
+**推荐用 SSH 地址**，而不是网页上显示的 `https://` 地址。原因：SSH **不依赖 VPN/VPN 是否开启**，
+而 https 直连只有在 VPN 处于 TUN/全局模式时才通（实测：VPN 关时 443 卡住 20 秒后失败，VPN 开时正常）。
+依赖 VPN 的连接方式会让"今天能推、明天不能推"这种问题反复出现。
 
 | 情况 | 处理 |
 |---|---|
 | 首次配置 | 生成密钥 `ssh-keygen -t ed25519`，把 `~/.ssh/id_ed25519.pub` 贴到 GitHub → Settings → SSH keys |
 | 验证是否可用 | `ssh -T git@github.com`，看到 `Hi <你的用户名>!` 即为成功 |
 | 22 端口被封 | 在 `~/.ssh/config` 加：`Host github.com` / `HostName ssh.github.com` / `Port 443` / `User git` |
-| 必须走 HTTPS 时 | `git config --global http.proxy http://127.0.0.1:7897`（按自己的代理端口改） |
+| 确实要用 https 时 | 先确认 VPN 已开启；若仍失败，配代理：`git config --global http.proxy http://127.0.0.1:7897`（按自己的代理端口改） |
 
 打开 GitHub 网页做操作（提 PR、改设置）前，**先确认代理 / VPN 在运行**。
 
@@ -181,7 +182,7 @@ docs/需求追踪矩阵.md   ← 主线，唯一事实来源
 |---|---|---|
 | 用中文路径存项目 | OpenCV 的 `imread`/`imwrite` 在 Windows 中文路径下**静默返回 None**，不报错，只是所有图都读不到 | 仓库放在 `F:\se\TargetDetectionSystem`，路径里不要出现中文 |
 | **含中文的 `.ps1` 存成 UTF-8 无 BOM** | PowerShell 5.1 会按 GBK 解码，中文字节被错切后**可能凑出 `@"`**，被当成 here-string 起始符，导致整个脚本在毫不相干的行上报语法错误 | 保存为 **UTF-8 with BOM**。VS Code 右下角可切换；命令行转换见 [`docs/调试记录/2026-10-12-PowerShell中文脚本解析失败.md`](docs/调试记录/2026-10-12-PowerShell中文脚本解析失败.md) |
-| 照抄网页的 https 地址 | 443 直连超时，卡住 20 秒后失败 | 见第二节，一律用 SSH |
+| 照抄网页的 https 地址 | VPN 关闭时 443 直连超时，卡住 20 秒后失败；且让网络状态变成了依赖项 | 见第二节，一律用 SSH（SSH 不依赖 VPN） |
 | 每台机器依赖版本不同 | "在我这能跑" | 按 `requirements.lock.txt` 安装 |
 | 把 `~$xxx.pptx` 提交上去 | 别人打开文件报错 | `.gitignore` 已忽略，但仍要看清 `git status` |
 | 把权重 / 数据集提交上去 | 仓库体积爆炸，且 GitHub 免费 LFS 只有 1GB | 权重走 Release 附件，数据走 `fetch_data.ps1` |
