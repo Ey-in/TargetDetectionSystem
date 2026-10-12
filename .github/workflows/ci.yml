@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 同一分支连续推送时取消旧运行，避免排队浪费额度
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ⚠️ 这个 job 名称是分支保护里要选的「状态检查」名称，改名需同步更新
+  #    docs/仓库设置清单.md
+  lint-and-test:
+    name: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          # 校验提交信息需要完整历史
+          fetch-depth: 0
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装开发依赖
+        # 注意：只装 requirements-dev.txt，不装 ultralytics / torch
+        # 因此测试必须不依赖真实模型 —— 这是刻意的架构约束，见该文件内注释
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: 代码风格检查
+        run: ruff check .
+
+      - name: 单元测试
+        run: pytest -q
+
+      - name: 校验 PR 标题
+        # Squash 合并后 PR 标题会成为 main 上的提交信息，所以它比单个提交更要紧
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|docs|test|chore|refactor|perf|style|build|ci|revert)(\([^)]+\))?!?: .+'
+          if ! printf '%s' "$PR_TITLE" | grep -Eq "$pattern"; then
+            echo "::error::PR 标题不符合 Conventional Commits：$PR_TITLE"
+            echo "正确格式： <类型>(<范围>): <描述>"
+            echo "例如：     feat(detect): 支持图片上传与画框渲染"
+            echo "说明见 CONTRIBUTING.md 第四节。"
+            exit 1
+          fi
+          echo "PR 标题合规：$PR_TITLE"
+
+      - name: 校验分支内的提交信息
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pattern='^(feat|fix|docs|test|chore|refactor|perf|style|build|ci|revert)(\([^)]+\))?!?: .+'
+          fail=0
+          for sha in $(git rev-list "$BASE_SHA..$HEAD_SHA"); do
+            subject=$(git log -1 --pretty=%s "$sha")
+            case "$subject" in
+              Merge*|Revert*|fixup!*|squash!*) continue ;;
+            esac
+            if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
+              echo "::error::提交信息不符合规范：$sha $subject"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "说明见 CONTRIBUTING.md 第四节。"
+          fi
+          exit $fail
+
+      - name: 检查是否误提交了大文件
+        # 权重和数据集一律不入库：权重走 Release 附件，数据走 fetch_data.ps1
+        run: |
+          fail=0
+          for f in $(git ls-files); do
+            case "$f" in
+              *.pt|*.pth|*.onnx|*.engine|*.tflite|*.mp4|*.avi|~$*)
+                echo "::error::不应入库的文件：$f"
+                fail=1
+                ;;
+            esac
+            if [ -f "$f" ]; then
+              size=$(stat -c%s "$f")
+              if [ "$size" -gt 5242880 ]; then
+                echo "::error::文件超过 5MB，请确认是否需要入库：$f ($((size/1048576))MB)"
+                fail=1
+              fi
+            fi
+          done
+          exit $fail

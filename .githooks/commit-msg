@@ -1,0 +1,42 @@
+#!/bin/sh
+# ============================================================
+# 本地提交信息校验（Conventional Commits）
+#
+# 启用： git config core.hooksPath .githooks
+#        （scripts/setup-dev.ps1 会自动设置）
+# 绕过： git commit --no-verify
+#
+# 注意：钩子是每个 clone 各自生效的，指望不上所有人。
+#       真正的底线是 CI（.github/workflows/ci.yml），它拦的是 PR。
+# ============================================================
+
+msg_file="$1"
+
+# 取第一条非注释、非空行作为标题
+subject=$(grep -v '^#' "$msg_file" | sed '/^[[:space:]]*$/d' | head -n 1)
+
+# 合并与回滚提交放行
+case "$subject" in
+  Merge*|Revert*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|test|chore|refactor|perf|style|build|ci|revert)(\([^)]+\))?!?: .+'
+
+if printf '%s' "$subject" | grep -Eq "$pattern"; then
+  exit 0
+fi
+
+echo ""
+echo "✗ 提交信息不符合规范："
+echo "      $subject"
+echo ""
+echo "  正确格式： <类型>(<范围>): <描述>"
+echo "  类型可选： feat | fix | docs | test | chore | refactor | perf | style | build | ci | revert"
+echo ""
+echo "  示例：     feat(detect): 支持图片上传与画框渲染"
+echo "             docs(需求): 补充用例模型章节"
+echo "             fix(video): 修复长视频逐帧处理的内存泄漏"
+echo ""
+echo "  详见 CONTRIBUTING.md 第四节。如确需绕过： git commit --no-verify"
+echo ""
+exit 1

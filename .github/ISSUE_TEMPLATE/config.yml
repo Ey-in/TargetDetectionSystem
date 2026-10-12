@@ -1,0 +1,17 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 协作规范（提 Issue 前建议先看）
+    url: https://github.com/Ey-in/TargetDetectionSystem/blob/main/CONTRIBUTING.md
+    about: 分支怎么开、commit 怎么写、PR 怎么提、合规条款有哪些
+
+  - name: 我该做什么、什么时候交
+    url: https://github.com/Ey-in/TargetDetectionSystem/blob/main/docs/开发计划.md
+    about: 全项目唯一的任务表与里程碑安排
+
+  - name: 某条需求做到哪了
+    url: https://github.com/Ey-in/TargetDetectionSystem/blob/main/docs/需求追踪矩阵.md
+    about: 需求 → 设计 → 代码 → 测试用例 → PR 的完整追踪
+
+  - name: 引入第三方代码前要先登记
+    url: https://github.com/Ey-in/TargetDetectionSystem/blob/main/docs/引用与第三方来源登记.md
+    about: 课程禁止整体拷贝现成代码，参考开源须标注来源并说明修改点
