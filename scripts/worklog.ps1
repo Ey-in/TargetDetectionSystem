@@ -116,12 +116,21 @@ Write-Note "活跃天数：$($allDates.Count)"
 # ---------------------------------------------------------------- 按人
 Write-Step "按人统计"
 
-$byAuthor = $commits | Group-Object -Property Author | ForEach-Object {
+# 按邮箱归并身份，而不是按姓名。
+# 同一个人的显示名可能不一致（本机 git 配置的名字与网页提交用的名字往往不同），
+# 但邮箱才代表身份。按姓名分组会把同一个人拆成两行，导致报告里的工作量统计失真。
+$emailToName = @{}
+foreach ($grp in ($commits | Group-Object -Property Email)) {
+    $latest = $grp.Group | Sort-Object Date | Select-Object -Last 1
+    $emailToName[$grp.Name] = $latest.Author
+}
+
+$byAuthor = $commits | Group-Object -Property Email | ForEach-Object {
     $g = $_.Group
     $dates = @($g | Select-Object -ExpandProperty Date -Unique)
     [PSCustomObject]@{
-        '姓名'     = $_.Name
-        '邮箱'     = ($g | Select-Object -First 1).Email
+        '姓名'     = $emailToName[$_.Name]
+        '邮箱'     = $_.Name
         '提交数'   = $g.Count
         '新增行'   = ($g | Measure-Object -Property Added   -Sum).Sum
         '删除行'   = ($g | Measure-Object -Property Deleted -Sum).Sum
@@ -138,17 +147,17 @@ $byAuthor | Format-Table -AutoSize | Out-String -Width 200 | Write-Host
 Write-Step "按人 × 模块（体现分工与产出物）"
 
 $authorModule = $commits | ForEach-Object {
-    $a = $_.Author
+    $mail = $_.Email
     foreach ($p in $_.Paths) {
         $norm = $p -replace '\\', '/'
         $seg = $norm.Split('/')
         $top = $seg[0]
-        [PSCustomObject]@{ 作者 = $a; 模块 = $top }
+        [PSCustomObject]@{ 邮箱 = $mail; 模块 = $top }
     }
-} | Group-Object -Property 作者, 模块 | ForEach-Object {
+} | Group-Object -Property 邮箱, 模块 | ForEach-Object {
     $parts = $_.Name -split ', '
     [PSCustomObject]@{
-        '姓名'   = $parts[0]
+        '姓名'   = $emailToName[$parts[0]]
         '模块'   = $parts[1]
         '改动数' = $_.Count
     }
@@ -196,7 +205,7 @@ $byWeek | Format-Table -AutoSize | Out-String -Width 200 | Write-Host
 # ---------------------------------------------------------------- 风险提示
 Write-Step "风险提示"
 
-$authorCount = ($commits | Select-Object -ExpandProperty Author -Unique).Count
+$authorCount = @($commits | Select-Object -ExpandProperty Email -Unique).Count
 if ($authorCount -eq 1 -and $commits.Count -gt 5) {
     Write-Warn "全部 $($commits.Count) 条提交都来自同一个人：$($byAuthor[0].'姓名')"
     Write-Warn "这会让「工作量证明」无法体现分工。请确认："
