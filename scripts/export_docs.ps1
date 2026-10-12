@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     把 docs/ 下的 Markdown 文档导出为 Word，供提交
 

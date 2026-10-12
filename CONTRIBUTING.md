@@ -180,10 +180,12 @@ docs/需求追踪矩阵.md   ← 主线，唯一事实来源
 | 坑 | 后果 | 规避 |
 |---|---|---|
 | 用中文路径存项目 | OpenCV 的 `imread`/`imwrite` 在 Windows 中文路径下**静默返回 None**，不报错，只是所有图都读不到 | 仓库放在 `F:\se\TargetDetectionSystem`，路径里不要出现中文 |
+| **含中文的 `.ps1` 存成 UTF-8 无 BOM** | PowerShell 5.1 会按 GBK 解码，中文字节被错切后**可能凑出 `@"`**，被当成 here-string 起始符，导致整个脚本在毫不相干的行上报语法错误 | 保存为 **UTF-8 with BOM**。VS Code 右下角可切换；命令行转换见 [`docs/调试记录/2026-10-12-PowerShell中文脚本解析失败.md`](docs/调试记录/2026-10-12-PowerShell中文脚本解析失败.md) |
 | 照抄网页的 https 地址 | 443 直连超时，卡住 20 秒后失败 | 见第二节，一律用 SSH |
 | 每台机器依赖版本不同 | "在我这能跑" | 按 `requirements.lock.txt` 安装 |
 | 把 `~$xxx.pptx` 提交上去 | 别人打开文件报错 | `.gitignore` 已忽略，但仍要看清 `git status` |
 | 把权重 / 数据集提交上去 | 仓库体积爆炸，且 GitHub 免费 LFS 只有 1GB | 权重走 Release 附件，数据走 `fetch_data.ps1` |
+| 提交邮箱未绑定 GitHub 账号 | 提交不归属到你的账号，`worklog.ps1` 统计出的贡献助教无法核实 | 每位组员按 [`docs/仓库设置清单.md`](docs/仓库设置清单.md) 第 7 步核对自己的邮箱 |
 | 一次提交混了多件事 | PR 无法评审，报告无法引用 | 一次提交只做一件事 |
 | 直接在 main 上改 | 演示前搞坏主干 | main 已设保护，直接推会被拒 |
 
